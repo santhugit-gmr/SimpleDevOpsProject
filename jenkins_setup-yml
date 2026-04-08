@@ -1,0 +1,69 @@
+---
+- name: Install and Configure Jenkins
+  hosts: jenkins
+  become: true
+
+  vars:
+    jenkins_port: 8080
+
+  tasks:
+
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Install Java (Amazon Linux / RHEL)
+      yum:
+        name: java-17-amazon-corretto
+        state: present
+
+    - name: Add Jenkins repository
+      get_url:
+        url: https://pkg.jenkins.io/redhat-stable/jenkins.repo
+        dest: /etc/yum.repos.d/jenkins.repo
+
+    - name: Import Jenkins GPG key
+      rpm_key:
+        state: present
+        key: https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+
+    - name: Install Jenkins
+      yum:
+        name: jenkins
+        state: present
+
+    - name: Reload systemd daemon
+      command: systemctl daemon-reexec
+
+    - name: Start Jenkins service
+      service:
+        name: jenkins
+        state: started
+
+    - name: Enable Jenkins at boot
+      service:
+        name: jenkins
+        enabled: true
+
+    - name: Open port 8080 in firewall (if firewalld is running)
+      firewalld:
+        port: "{{ jenkins_port }}/tcp"
+        permanent: true
+        state: enabled
+        immediate: yes
+      ignore_errors: yes
+
+    - name: Wait for Jenkins to start
+      wait_for:
+        port: "{{ jenkins_port }}"
+        delay: 10
+        timeout: 60
+
+    - name: Get initial admin password
+      command: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_password
+
+    - name: Show Jenkins Admin Password
+      debug:
+        msg: "Jenkins Admin Password: {{ jenkins_password.stdout }}"
