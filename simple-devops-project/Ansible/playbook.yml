@@ -15,5 +15,5 @@
 
     - name: Copy Website
       copy:
-        src: /app/index.html
+        src: index.html
         dest: /var/www/html/index.html
