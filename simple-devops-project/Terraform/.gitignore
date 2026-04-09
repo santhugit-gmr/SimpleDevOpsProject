@@ -1,0 +1,17 @@
+# Private keys (VERY IMPORTANT)
+*.pem
+
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Ansible inventory (optional if it contains sensitive IPs/keys)
+inventory
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
